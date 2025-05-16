@@ -22,7 +22,7 @@ export function SuiFlixHero({ onVerifyClick }: SuiFlixHeroProps) {
         </h1>
 
         <p className="mx-auto mb-10 max-w-2xl text-xl text-gray-300">
-          Verify your age once, access content everywhere. No personal data stored.
+          Verify your age once, access content everywhere. No personal data stored..
         </p>
 
         <Button
