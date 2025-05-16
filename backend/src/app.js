@@ -2,11 +2,13 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-// Import routes (to be created)
-// const userRoutes = require('./routes/userRoutes');
+// Imports
+const encryptUploadRoutes = require('./routes/encryptUploadRoutes');
+
 
 // Initialize express app
 const app = express();
+
 
 // Middleware
 app.use(cors()); // Enable CORS
@@ -17,6 +19,8 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the API' });
 });
+
+app.use('/api/encrypt-upload', encryptUploadRoutes);
 
 // Use routes
 // app.use('/api/users', userRoutes);
