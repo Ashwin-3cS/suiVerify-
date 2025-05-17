@@ -12,10 +12,7 @@ export default function ProviderPage() {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
 
   const handleVerificationSelect = (type: VerificationType) => {
-    if (!isWalletConnected) {
-      alert("Please connect your wallet first")
-      return
-    }
+
     setSelectedVerification(type)
     setIsModalOpen(true)
   }
@@ -26,7 +23,7 @@ export default function ProviderPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <ProviderHeader isConnected={isWalletConnected} onConnectWallet={handleConnectWallet} />
+      <ProviderHeader   />
       <main className="flex-1 container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-center mb-12">Choose the ID you want to verify</h1>
         <IdCards onSelect={handleVerificationSelect} />
