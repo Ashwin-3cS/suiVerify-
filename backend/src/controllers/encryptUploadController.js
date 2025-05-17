@@ -9,8 +9,14 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
+const axios = require('axios');
 
 dotenv.config({ path: '../.env' });
+
+// Define custom Walrus endpoints
+const PUBLISHER_ENDPOINT = process.env.PUBLISHER_ENDPOINT;
+const AGGREGATOR_ENDPOINT = process.env.AGGREGATOR_ENDPOINT;
+const NUM_EPOCH = 1;
 
 // Initialize Sui client
 const phrase = process.env.KEYPHRASE;
@@ -48,10 +54,9 @@ const client = new SuiClient({
 let sealClient;
 try {
   sealClient = new SealClient({
-    suiClient : client,
+    suiClient: client,
     serverObjectIds: getAllowlistedKeyServers('testnet'), 
     verifyKeyServers: false,
-
   });
 
   console.log('KeyServer IDs:', getAllowlistedKeyServers('testnet'));
@@ -66,6 +71,109 @@ const packageId = process.env.PACKAGE_ID;
 const whitelistCapId = process.env.CAP_ID;
 const whitelistId = process.env.WHITELIST_ID;
 const moduleName = 'did_whitelist_contract';
+
+/**
+ * Get the publisher URL for a given path
+ * @param {string} path - The API path
+ * @returns {string} - The full publisher URL
+ */
+function getPublisherUrl(path) {
+  const cleanPath = path.replace(/^\/+/, '').replace(/^v1\//, '');
+  return `${PUBLISHER_ENDPOINT}/v1/${cleanPath}`;
+}
+
+/**
+ * Get the aggregator URL for a given path
+ * @param {string} path - The API path
+ * @returns {string} - The full aggregator URL
+ */
+function getAggregatorUrl(path) {
+  const cleanPath = path.replace(/^\/+/, '').replace(/^v1\//, '');
+  return `${AGGREGATOR_ENDPOINT}/v1/${cleanPath}`;
+}
+
+/**
+ * Store encrypted blob on Walrus
+ * @param {Uint8Array} encryptedData - The encrypted data to store
+ * @returns {Promise<object>} - The storage information
+ */
+async function storeEncryptedBlob(encryptedData) {
+  try {
+    const url = `${PUBLISHER_ENDPOINT}/v1/blobs?epochs=${NUM_EPOCH}`;
+    console.log("Publishing blob to URL:", url);
+    
+    // Convert Uint8Array to Buffer if needed
+    const dataBuffer = Buffer.isBuffer(encryptedData) ? encryptedData : Buffer.from(encryptedData);
+    
+    // Make the PUT request
+    const response = await axios.put(url, dataBuffer, {
+      headers: {
+        'Content-Type': 'application/octet-stream'
+      },
+      maxBodyLength: Infinity, // Allow large payloads
+      maxContentLength: Infinity
+    });
+    
+    if (response.status === 200) {
+      console.log("Blob published successfully");
+      return { info: response.data };
+    } else {
+      console.error(`Error publishing blob: ${response.status}`);
+      throw new Error(`Something went wrong when storing the blob! Status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Error storing encrypted blob:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Display upload information
+ * @param {object} storageInfo - The storage information from Walrus
+ * @param {string} mediaType - The media type of the file
+ * @param {string} encryptionId - The encryption ID
+ * @returns {object|null} - The formatted upload information
+ */
+function displayUpload(storageInfo, mediaType, encryptionId) {
+  const SUI_VIEW_TX_URL = `https://suiscan.xyz/testnet/tx`;
+  const SUI_VIEW_OBJECT_URL = `https://suiscan.xyz/testnet/object`;
+  
+  let info;
+  if ('alreadyCertified' in storageInfo) {
+    info = {
+      status: 'Already certified',
+      blobId: storageInfo.alreadyCertified.blobId,
+      endEpoch: storageInfo.alreadyCertified.endEpoch,
+      suiRefType: 'Previous Sui Certified Event',
+      suiRef: storageInfo.alreadyCertified.event.txDigest,
+      suiBaseUrl: SUI_VIEW_TX_URL,
+      blobUrl: getAggregatorUrl(`blobs/${storageInfo.alreadyCertified.blobId}`),
+      suiUrl: `${SUI_VIEW_OBJECT_URL}/${storageInfo.alreadyCertified.event.txDigest}`,
+      isImage: mediaType.startsWith('image'),
+      whitelistId: whitelistId,
+      encryptionId: encryptionId
+    };
+  } else if ('newlyCreated' in storageInfo) {
+    info = {
+      status: 'Newly created',
+      blobId: storageInfo.newlyCreated.blobObject.blobId,
+      endEpoch: storageInfo.newlyCreated.blobObject.storage.endEpoch,
+      suiRefType: 'Associated Sui Object',
+      suiRef: storageInfo.newlyCreated.blobObject.id,
+      suiBaseUrl: SUI_VIEW_OBJECT_URL,
+      blobUrl: getAggregatorUrl(`blobs/${storageInfo.newlyCreated.blobObject.blobId}`),
+      suiUrl: `${SUI_VIEW_OBJECT_URL}/${storageInfo.newlyCreated.blobObject.id}`,
+      isImage: mediaType.startsWith('image'),
+      whitelistId: whitelistId,
+      encryptionId: encryptionId
+    };
+  } else {
+    console.error('Unhandled successful response!', storageInfo);
+    return null;
+  }
+  
+  return info;
+}
 
 /**
  * Add a user address to the whitelist
@@ -94,7 +202,7 @@ async function addUserToWhitelist(userAddress) {
     });
     
     // Set gas budget
-    transaction.setGasBudget(5000000000);
+    transaction.setGasBudget(100000000);
     
     console.log('Transaction prepared, signing and executing...');
     
@@ -120,10 +228,10 @@ async function addUserToWhitelist(userAddress) {
 }
 
 /**
- * Encrypt file data using SEAL
+ * Encrypt file data using SEAL and store on Walrus
  * @param {Buffer|Uint8Array} fileData - The file data to encrypt
  * @param {string} policyObject - The whitelist ID to use as policy object
- * @returns {Promise<{encryptedBytes: Uint8Array, encryptionId: string}>} - The encrypted data and encryption ID
+ * @returns {Promise<{encryptedBytes: Uint8Array, encryptionId: string, storageInfo: object, uploadInfo: object}>} - The encrypted data and related info
  */
 async function encryptWithSeal(fileData, policyObject) {
   try {
@@ -158,12 +266,23 @@ async function encryptWithSeal(fileData, policyObject) {
     
     console.log('Encryption successful, encrypted size:', encryptedBytes.length, 'bytes');
     
+    // Store the encrypted blob on Walrus
+    console.log('Storing encrypted blob on Walrus...');
+    const storageInfo = await storeEncryptedBlob(encryptedBytes);
+    console.log('Blob stored successfully:', storageInfo);
+    
+    // Format the upload information
+    const uploadInfo = displayUpload(storageInfo.info, 'application/octet-stream', id);
+    console.log('Upload info:', uploadInfo);
+    
     return {
       encryptedBytes,
-      encryptionId: id
+      encryptionId: id,
+      storageInfo: storageInfo.info,
+      uploadInfo
     };
   } catch (error) {
-    console.error('Error during SEAL encryption:', error.message);
+    console.error('Error during SEAL encryption or storage:', error.message);
     console.error('Error stack:', error.stack);
     throw error;
   }
@@ -220,18 +339,21 @@ exports.encryptAndUpload = async (req, res, next) => {
     console.log('File uploaded, proceeding with encryption');
     const fileBuffer = file.buffer;
     const fileName = file.originalname || 'unknown';
+    const fileType = file.mimetype || 'application/octet-stream';
     console.log('File name:', fileName);
+    console.log('File type:', fileType);
     console.log('File size:', fileBuffer.length, 'bytes');
     
     // Encrypt the file using SEAL with the whitelist ID as the policy object
+    // and store it on Walrus
     console.log('Calling encryptWithSeal...');
-    const { encryptedBytes, encryptionId } = await encryptWithSeal(fileBuffer, whitelistId);
+    const { encryptedBytes, encryptionId, storageInfo, uploadInfo } = await encryptWithSeal(fileBuffer, whitelistId);
     
     // Return combined results
     console.log('Sending successful response');
     res.status(200).json({
       success: true,
-      message: 'User added to whitelist and file encrypted successfully',
+      message: 'User added to whitelist and file encrypted and stored successfully',
       data: {
         whitelist: {
           transactionDigest: whitelistResult.digest,
@@ -239,11 +361,14 @@ exports.encryptAndUpload = async (req, res, next) => {
         },
         file: {
           fileName,
+          fileType,
           encryptionId,
           whitelistId,
           encryptedSize: encryptedBytes.length,
-          // Convert encryptedBytes to base64 for transmission
-          encryptedData: Buffer.from(encryptedBytes).toString('base64')
+        },
+        storage: uploadInfo || {
+          status: 'Stored on Walrus',
+          blobInfo: storageInfo
         },
         timestamp: new Date()
       }
