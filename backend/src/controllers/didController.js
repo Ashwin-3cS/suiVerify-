@@ -30,7 +30,7 @@ exports.createDID = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'DID created successfully',
-      suiResponse, // this contains the full response from Sui
+      suiResponse, 
     });
   } catch (error) {
     console.error('Error creating DID:', error);

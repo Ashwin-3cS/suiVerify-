@@ -25,38 +25,25 @@ export function SuccessState({ onClose, message, transactionDetails }: SuccessSt
             <AccordionTrigger className="text-sm">View Transaction Details</AccordionTrigger>
             <AccordionContent>
               <div className="text-sm space-y-3 bg-gray-50 p-3 rounded-md overflow-auto max-h-60">
-                {transactionDetails.whitelist && (
+                {/* DID Transaction Details */}
+                {transactionDetails.did && (
                   <div className="space-y-1">
-                    <h4 className="font-medium">Whitelist Information</h4>
+                    <h4 className="font-medium">DID Transaction Information</h4>
                     <p className="text-xs font-mono break-all">
-                      <span className="font-medium">Transaction: </span>
-                      {transactionDetails.whitelist.transactionDigest}
-                    </p>
-                    <p className="text-xs font-mono break-all">
-                      <span className="font-medium">Address: </span>
-                      {transactionDetails.whitelist.userAddress}
+                      <span className="font-medium">Transaction Digest: </span>
+                      <a 
+                        href={`https://suiscan.xyz/testnet/tx/${transactionDetails.did.transactionDigest}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline inline-flex items-center"
+                      >
+                        {transactionDetails.did.transactionDigest}
+                        <ExternalLink className="h-3 w-3 ml-1" />
+                      </a>
                     </p>
                   </div>
                 )}
-                
-                {transactionDetails.file && (
-                  <div className="space-y-1">
-                    <h4 className="font-medium">File Information</h4>
-                    <p className="text-xs">
-                      <span className="font-medium">Name: </span>
-                      {transactionDetails.file.fileName}
-                    </p>
-                    <p className="text-xs font-mono break-all">
-                      <span className="font-medium">Encryption ID: </span>
-                      {transactionDetails.file.encryptionId}
-                    </p>
-                    <p className="text-xs font-mono break-all">
-                      <span className="font-medium">Whitelist ID: </span>
-                      {transactionDetails.file.whitelistId}
-                    </p>
-                  </div>
-                )}
-                
+                                              
                 {transactionDetails.storage && (
                   <div className="space-y-1">
                     <h4 className="font-medium">Storage Information</h4>
@@ -72,19 +59,6 @@ export function SuccessState({ onClose, message, transactionDetails }: SuccessSt
                       </p>
                     )}
                     
-                    {transactionDetails.storage.blobUrl && (
-                      <p className="text-xs flex items-center">
-                        <span className="font-medium mr-1">Blob URL: </span>
-                        <a 
-                          href={transactionDetails.storage.blobUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline inline-flex items-center"
-                        >
-                          View <ExternalLink className="h-3 w-3 ml-1" />
-                        </a>
-                      </p>
-                    )}
                   </div>
                 )}
                 

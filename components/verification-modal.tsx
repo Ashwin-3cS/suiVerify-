@@ -232,64 +232,76 @@ const buildAndSignTransaction = async () => {
     }
   }
 
-  const handleClaimNFT = async () => {
-    if (!userAddress) {
-      setError("Wallet not connected. Please connect your wallet first.")
-      return
-    }
+const handleClaimNFT = async () => {
+  if (!userAddress) {
+    setError("Wallet not connected. Please connect your wallet first.")
+    return
+  }
+  
+  setStep("claiming")
+  
+  try {
+    console.log('Building and signing transaction for DID creation');
     
-    setStep("claiming")
+    // Build and sign the transaction
+    const signedTx = await buildAndSignTransaction();
     
-    try {
-      console.log('Building and signing transaction for DID creation');
-      
-      // Build and sign the transaction
-      const signedTx = await buildAndSignTransaction();
-      
-      console.log('Sending transaction to backend:', DID_API_ENDPOINT);
-      console.log('Transaction data:', signedTx);
-      
-      // Send the signed transaction to the backend for execution
-      const response = await axios.post(DID_API_ENDPOINT, signedTx, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('DID API Response:', response.data);
-      
-      if (response.data.success) {
-        setDidTransactionDetails(response.data.data);
-        setStep("claimed");
-      } else {
-        setError(response.data.message || 'DID creation failed');
-        setStep("error");
+    console.log('Sending transaction to backend:', DID_API_ENDPOINT);
+    console.log('Transaction data:', signedTx);
+    
+    // Send the signed transaction to the backend for execution
+    const response = await axios.post(DID_API_ENDPOINT, signedTx, {
+      headers: {
+        'Content-Type': 'application/json'
       }
-    } catch (err: any) {
-      console.error('Error during NFT claiming:', err);
+    });
+    
+    console.log('DID API Response:', response.data);
+    
+    if (response.data.success) {
+      // Create a structured transaction details object that includes the digest
+      const didTransactionDetails = {
+        did: {
+          transactionDigest: response.data.suiResponse?.digest,
+          confirmedLocalExecution: response.data.suiResponse?.confirmedLocalExecution
+        },
+        // Include original transaction details if needed
+        ...transactionDetails,
+        // Add timestamp if not already present
+        timestamp: transactionDetails?.timestamp || new Date().toISOString()
+      };
       
-      let errorMessage = 'An unknown error occurred';
-      
-      if (err.response) {
-        console.error('Error response data:', err.response.data);
-        console.error('Error response status:', err.response.status);
-        
-        if (err.response.status === 404) {
-          errorMessage = 'API endpoint not found. Please check server configuration.';
-        } else {
-          errorMessage = err.response.data?.message || `Server error: ${err.response.status}`;
-        }
-      } else if (err.request) {
-        console.error('Error request:', err.request);
-        errorMessage = 'No response from server. Please check your network connection.';
-      } else {
-        errorMessage = err.message || 'Error setting up request';
-      }
-      
-      setError(errorMessage);
+      setDidTransactionDetails(didTransactionDetails);
+      setStep("claimed");
+    } else {
+      setError(response.data.message || 'DID creation failed');
       setStep("error");
     }
+  } catch (err: any) {
+    console.error('Error during NFT claiming:', err);
+    
+    let errorMessage = 'An unknown error occurred';
+    
+    if (err.response) {
+      console.error('Error response data:', err.response.data);
+      console.error('Error response status:', err.response.status);
+      
+      if (err.response.status === 404) {
+        errorMessage = 'API endpoint not found. Please check server configuration.';
+      } else {
+        errorMessage = err.response.data?.message || `Server error: ${err.response.status}`;
+      }
+    } else if (err.request) {
+      console.error('Error request:', err.request);
+      errorMessage = 'No response from server. Please check your network connection.';
+    } else {
+      errorMessage = err.message || 'Error setting up request';
+    }
+    
+    setError(errorMessage);
+    setStep("error");
   }
+}
 
   const handleClose = () => {
     if (step === "claimed") {
