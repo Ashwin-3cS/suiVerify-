@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { LogOut } from "lucide-react"
+import { ConnectButton } from "@suiet/wallet-kit"
 
 interface SuiFlixHeaderProps {
   isConnected: boolean
@@ -32,12 +33,7 @@ export function SuiFlixHeader({ isConnected, onConnect, onDisconnect }: SuiFlixH
               </Button>
             </>
           ) : (
-            <Button
-              onClick={onConnect}
-              className="bg-gradient-to-r from-red-600 to-violet-600 hover:from-red-700 hover:to-violet-700"
-            >
-              Connect Wallet
-            </Button>
+            <ConnectButton/>
           )}
         </div>
       </div>
