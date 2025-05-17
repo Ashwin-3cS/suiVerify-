@@ -48,11 +48,14 @@ const client = new SuiClient({
 let sealClient;
 try {
   sealClient = new SealClient({
-    client,
+    suiClient : client,
     serverObjectIds: getAllowlistedKeyServers('testnet'), 
     verifyKeyServers: false,
 
   });
+
+  console.log('KeyServer IDs:', getAllowlistedKeyServers('testnet'));
+
 } catch (error) {
   console.error('ERROR: Failed to initialize SEAL client:', error.message);
   // Continue execution, but this will fail later when sealClient is used

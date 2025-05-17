@@ -11,7 +11,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@mysten/seal": "^0.4.3",
+    "@mysten/seal": "^0.3.5",
+    "@mysten/sui": "^1.26.1",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.5.0",
