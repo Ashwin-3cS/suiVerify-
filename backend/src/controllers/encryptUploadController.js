@@ -19,8 +19,49 @@ const AGGREGATOR_ENDPOINT = process.env.AGGREGATOR_ENDPOINT;
 const NUM_EPOCH = 1;
 
 // Initialize Sui client
-const phrase = process.env.KEYPHRASE;
 const fullnode = process.env.FULLNODE;
+
+// Attestation contract constants
+const ATTESTATION_PACKAGE_ID = process.env.ATTESTATION_PACKAGE_ID || '0xe5bef0f39a39bf05d977665c26d731c139228ae09fadfb5b8cb956261f68baf6';
+const ATTESTATION_CAP_ID = process.env.ATTESTATION_CAP_ID || '0x52618a65c9ed98aeb4415be9bf75aa1dce7e5df2c1edb8ef44d7e7c11b3d0fb1';
+const ATTESTATION_REGISTRY_ID = process.env.ATTESTATION_REGISTRY_ID || '0xbd42f516c8e21d81b064d93c94b925f5ab66cfb49170fd036bcc77704205a9a7';
+const CLOCK_ID = process.env.CLOCK_ID || '0x6';
+const ATTESTATION_MODULE_NAME = 'attestation';
+
+// Keypair for whitelister role (can be the same or different)
+// const whitelisterPhrase = process.env.WHITELISTER_KEYPHRASE ;
+// let whitelisterKeypair;
+// try {`
+//   whitelisterKeypair = Ed25519Keypair.deriveKeypair(whitelisterPhrase);
+//   console.log('Whitelister address:', whitelisterKeypair.toSuiAddress());
+// } catch (error) {
+//   console.error('ERROR: Failed to derive whitelister keypair:', error.message);
+//   // Continue execution, but this will fail later when whitelisterKeypair is used
+// }
+
+
+
+// Keypair for encrypter operations
+const phrase = process.env.KEYPHRASE;
+let keypair;
+try {
+  keypair = Ed25519Keypair.deriveKeypair(phrase);
+} catch (error) {
+  console.error('ERROR: Failed to derive keypair from phrase:', error.message);
+  // Continue execution, but this will fail later when keypair is used
+}
+
+
+// Keypair for uploader operations
+// const phrase = process.env.KEYPHRASE;
+// let keypair;
+// try {
+//   keypair = Ed25519Keypair.deriveKeypair(phrase);
+// } catch (error) {
+//   console.error('ERROR: Failed to derive keypair from phrase:', error.message);
+//   // Continue execution, but this will fail later when keypair is used
+// }
+
 
 // Add environment variable validation
 if (!phrase) {
@@ -37,14 +78,12 @@ console.log('- PACKAGE_ID:', process.env.PACKAGE_ID || 'Not set');
 console.log('- CAP_ID:', process.env.CAP_ID || 'Not set');
 console.log('- WHITELIST_ID:', process.env.WHITELIST_ID || 'Not set');
 console.log('- KEYPHRASE:', phrase ? '[Set but masked]' : 'Not set');
+console.log('- ATTESTATION_PACKAGE_ID:', ATTESTATION_PACKAGE_ID);
+console.log('- ATTESTATION_CAP_ID:', ATTESTATION_CAP_ID);
+console.log('- ATTESTATION_REGISTRY_ID:', ATTESTATION_REGISTRY_ID);
 
-let keypair;
-try {
-  keypair = Ed25519Keypair.deriveKeypair(phrase);
-} catch (error) {
-  console.error('ERROR: Failed to derive keypair from phrase:', error.message);
-  // Continue execution, but this will fail later when keypair is used
-}
+
+
 
 const client = new SuiClient({
   url: fullnode,
@@ -176,9 +215,9 @@ function displayUpload(storageInfo, mediaType, encryptionId) {
 }
 
 /**
- * Add a user address to the whitelist
+ * Add a user address to the whitelist and record in attestation contract
  * @param {string} userAddress - The address to add to the whitelist
- * @returns {Promise<object>} - Transaction result
+ * @returns {Promise<object>} - Transaction results
  */
 async function addUserToWhitelist(userAddress) {
   try {
@@ -188,28 +227,29 @@ async function addUserToWhitelist(userAddress) {
     console.log('Using package ID:', packageId);
     console.log('Using module name:', moduleName);
     
+    // Step 1: Add user to the whitelist
     // Create a new transaction
-    const transaction = new Transaction();
+    const whitelistTransaction = new Transaction();
     
     // Add the move call to add the user to the whitelist
-    transaction.moveCall({
+    whitelistTransaction.moveCall({
       target: `${packageId}::${moduleName}::add`,
       arguments: [
-        transaction.object(whitelistId), // Whitelist object
-        transaction.object(whitelistCapId), // Cap object
-        transaction.pure.address(userAddress), // User address to add - fixed to use pure.address
+        whitelistTransaction.object(whitelistId), // Whitelist object
+        whitelistTransaction.object(whitelistCapId), // Cap object
+        whitelistTransaction.pure.address(userAddress), // User address to add
       ],
     });
     
     // Set gas budget
-    transaction.setGasBudget(100000000);
+    whitelistTransaction.setGasBudget(100000000);
     
-    console.log('Transaction prepared, signing and executing...');
+    console.log('Whitelist transaction prepared, signing and executing...');
     
     // Sign and execute the transaction
-    const result = await client.signAndExecuteTransaction({
+    const whitelistResult = await client.signAndExecuteTransaction({
       signer: keypair,
-      transaction,
+      transaction: whitelistTransaction,
       requestType: 'WaitForLocalExecution',
       options: {
         showObjectChanges: true,
@@ -218,10 +258,63 @@ async function addUserToWhitelist(userAddress) {
     });
     
     console.log(`User ${userAddress} added to whitelist successfully`);
-    console.log('Transaction digest:', result.digest);
-    return result;
+    console.log('Whitelist transaction digest:', whitelistResult.digest);
+    
+    // Step 2: Record the whitelist action in the attestation contract
+    // Get the transaction digest as bytes
+    const txDigestBytes = Buffer.from(whitelistResult.digest.replace('0x', ''), 'hex');
+    
+    // Get current timestamp in seconds
+    const timestamp = Math.floor(Date.now() / 1000);
+    
+    console.log('Recording whitelist action in attestation contract');
+    console.log('Using attestation package ID:', ATTESTATION_PACKAGE_ID);
+    console.log('Using attestation cap ID:', ATTESTATION_CAP_ID);
+    console.log('Using attestation registry ID:', ATTESTATION_REGISTRY_ID);
+    console.log('Using timestamp:', timestamp);
+    
+    // Create a new transaction for attestation
+    const attestationTransaction = new Transaction();
+    
+    // Add the move call to record the whitelist action
+    attestationTransaction.moveCall({
+      target: `${ATTESTATION_PACKAGE_ID}::${ATTESTATION_MODULE_NAME}::record_whitelisted_user`,
+      arguments: [
+        attestationTransaction.object(ATTESTATION_CAP_ID), // Attestation capability
+        attestationTransaction.object(ATTESTATION_REGISTRY_ID), // Attestation registry
+        attestationTransaction.pure.address(userAddress), // User address
+        attestationTransaction.pure(txDigestBytes), // Transaction digest as bytes
+        attestationTransaction.pure.u64(timestamp), // Timestamp
+        attestationTransaction.object(CLOCK_ID), // Clock object
+      ],
+    });
+    
+    // Set gas budget
+    attestationTransaction.setGasBudget(100000000);
+    
+    console.log('Attestation transaction prepared, signing and executing...');
+    
+    // Sign and execute the transaction using the whitelister keypair
+    const attestationResult = await client.signAndExecuteTransaction({
+      signer: keypair,
+      transaction: attestationTransaction,
+      requestType: 'WaitForLocalExecution',
+      options: {
+        showObjectChanges: true,
+        showEffects: true,
+      },
+    });
+    
+    console.log(`User ${userAddress} recorded in attestation contract successfully`);
+    console.log('Attestation transaction digest:', attestationResult.digest);
+    
+    // Return both results
+    return {
+      whitelistResult,
+      attestationResult
+    };
   } catch (error) {
-    console.error(`Failed to add user to whitelist: ${error.message}`);
+    console.error(`Failed to add user to whitelist or record in attestation: ${error.message}`);
     console.error('Error stack:', error.stack);
     throw error;
   }
@@ -289,6 +382,127 @@ async function encryptWithSeal(fileData, policyObject) {
 }
 
 /**
+ * Record encryption details in the attestation contract
+ * @param {string} userAddress - The user's address
+ * @param {string} encryptionId - The encryption ID
+ * @param {string} policyObjectId - The policy object ID (whitelist ID)
+ * @returns {Promise<object>} - Transaction result
+ */
+async function recordEncryptionDetails(userAddress, encryptionId, policyObjectId) {
+  try {
+    console.log('Recording encryption details in attestation contract');
+    console.log('User address:', userAddress);
+    console.log('Encryption ID:', encryptionId);
+    console.log('Policy object ID:', policyObjectId);
+    
+    // Get current timestamp in seconds
+    const timestamp = Math.floor(Date.now() / 1000);
+    
+    // Create a new transaction
+    const transaction = new Transaction();
+    
+    // Add the move call to record encryption details
+    transaction.moveCall({
+      target: `${ATTESTATION_PACKAGE_ID}::${ATTESTATION_MODULE_NAME}::record_encryption_details`,
+      arguments: [
+        transaction.object(ATTESTATION_CAP_ID), // Attestation capability
+        transaction.object(ATTESTATION_REGISTRY_ID), // Attestation registry
+        transaction.pure.address(userAddress), // User address
+        transaction.pure(Buffer.from(encryptionId)), // Encryption ID as bytes
+        transaction.pure(Buffer.from(policyObjectId)), // Policy object ID as bytes
+        transaction.pure(Buffer.from(packageId)), // Package ID as bytes
+        transaction.pure.u64(timestamp), // Timestamp
+        transaction.object(CLOCK_ID), // Clock object
+      ],
+    });
+    
+    // Set gas budget
+    transaction.setGasBudget(100000000);
+    
+    // We need to use a keypair that has the ENCRYPTER role
+    // For now, we'll use the same keypair as the whitelister
+    const result = await client.signAndExecuteTransaction({
+      signer: keypair, // Should be replaced with encrypterKeypair in production
+      transaction,
+      requestType: 'WaitForLocalExecution',
+      options: {
+        showObjectChanges: true,
+        showEffects: true,
+      },
+    });
+    
+    console.log('Encryption details recorded successfully');
+    console.log('Transaction digest:', result.digest);
+    
+    return result;
+  } catch (error) {
+    console.error(`Failed to record encryption details: ${error.message}`);
+    console.error('Error stack:', error.stack);
+    throw error;
+  }
+}
+
+/**
+ * Record blob upload details in the attestation contract
+ * @param {string} userAddress - The user's address
+ * @param {string} dataOwnerAddress - The data owner's address (can be same as user)
+ * @returns {Promise<object>} - Transaction result
+ */
+async function recordBlobUpload(userAddress, dataOwnerAddress) {
+  try {
+    console.log('Recording blob upload details in attestation contract');
+    console.log('User address:', userAddress);
+    console.log('Data owner address:', dataOwnerAddress);
+    
+    // Get current timestamp in seconds
+    const timestamp = Math.floor(Date.now() / 1000);
+    
+    // Create a new transaction
+    const transaction = new Transaction();
+    
+    // Add the move call to record blob upload details
+    transaction.moveCall({
+      target: `${ATTESTATION_PACKAGE_ID}::${ATTESTATION_MODULE_NAME}::record_blob_upload`,
+      arguments: [
+        transaction.object(ATTESTATION_CAP_ID), // Attestation capability
+        transaction.object(ATTESTATION_REGISTRY_ID), // Attestation registry
+        transaction.pure.address(userAddress), // User address
+        transaction.pure.address(dataOwnerAddress), // Data owner address
+        transaction.pure.u64(timestamp), // Timestamp
+        transaction.object(CLOCK_ID), // Clock object
+      ],
+    });
+    
+    // Set gas budget
+    transaction.setGasBudget(100000000);
+    
+    // Sign and execute the transaction
+    const result = await client.signAndExecuteTransaction({
+      signer: keypair, // Using the same keypair for now
+      transaction,
+      requestType: 'WaitForLocalExecution',
+      options: {
+        showObjectChanges: true,
+        showEffects: true,
+      },
+    });
+    
+    console.log('Blob upload details recorded successfully');
+    console.log('Transaction digest:', result.digest);
+    
+    return result;
+  } catch (error) {
+    console.error(`Failed to record blob upload details: ${error.message}`);
+    console.error('Error stack:', error.stack);
+    throw error;
+  }
+}
+
+/**
+ * Combined controller function to handle both adding a user to the whitelist
+ * and encrypting a file using SEAL
+ */
+/**
  * Combined controller function to handle both adding a user to the whitelist
  * and encrypting a file using SEAL
  */
@@ -313,9 +527,9 @@ exports.encryptAndUpload = async (req, res, next) => {
       });
     }
     
-    // First, add the user to the whitelist
+    // First, add the user to the whitelist and record in attestation contract
     console.log('Calling addUserToWhitelist...');
-    const whitelistResult = await addUserToWhitelist(userAddress);
+    const { whitelistResult, attestationResult } = await addUserToWhitelist(userAddress);
     
     // Get the first file from the files array
     const file = req.files && req.files.length > 0 ? req.files[0] : null;
@@ -325,10 +539,15 @@ exports.encryptAndUpload = async (req, res, next) => {
       console.log('No file uploaded, returning whitelist result only');
       return res.status(200).json({
         success: true,
-        message: 'User added to whitelist successfully',
+        message: 'User added to whitelist and recorded in attestation contract successfully',
         data: {
-          transactionDigest: whitelistResult.digest,
-          userAddress,
+          whitelist: {
+            transactionDigest: whitelistResult.digest,
+            userAddress,
+          },
+          attestation: {
+            whitelistTransactionDigest: attestationResult.digest,
+          },
           timestamp: new Date()
         }
       });
@@ -349,15 +568,29 @@ exports.encryptAndUpload = async (req, res, next) => {
     console.log('Calling encryptWithSeal...');
     const { encryptedBytes, encryptionId, storageInfo, uploadInfo } = await encryptWithSeal(fileBuffer, whitelistId);
     
+    // Record encryption details in attestation contract
+    console.log('Recording encryption details in attestation contract...');
+    const encryptionAttestationResult = await recordEncryptionDetails(userAddress, encryptionId, whitelistId);
+    
+    // Record blob upload details in attestation contract
+    // For data owner, we use the same user address, but this could be different in some cases
+    console.log('Recording blob upload details in attestation contract...');
+    const blobUploadAttestationResult = await recordBlobUpload(userAddress, userAddress);
+    
     // Return combined results
     console.log('Sending successful response');
     res.status(200).json({
       success: true,
-      message: 'User added to whitelist and file encrypted and stored successfully',
+      message: 'User added to whitelist, file encrypted and stored, and attestations recorded successfully',
       data: {
         whitelist: {
           transactionDigest: whitelistResult.digest,
           userAddress,
+        },
+        attestation: {
+          whitelistTransactionDigest: attestationResult.digest,
+          encryptionTransactionDigest: encryptionAttestationResult.digest,
+          blobUploadTransactionDigest: blobUploadAttestationResult.digest,
         },
         file: {
           fileName,
