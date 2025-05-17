@@ -6,10 +6,22 @@ import React from 'react'
 // import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit'
 // import { ThemeProvider } from "@/components/theme-provider"
 // import { networkConfig } from '@/hooks/netWorkConfig'
-import { WalletProvider } from "@suiet/wallet-kit";
-
-// Import the wallet kit styles
+import {
+  WalletProvider,
+  Chain
+} from "@suiet/wallet-kit";// Import the wallet kit styles
 import "@suiet/wallet-kit/style.css";
+
+
+
+
+// const customChain: Chain = {
+//   id: "testnet",
+//   name: "Testnet",
+//   rpcUrl: "https://fullnode.testnet.sui.io:443",
+// };
+
+
 export function Providers({ children }: { children: React.ReactNode }) {
   // Create a client
   // const [queryClient] = React.useState(() => new QueryClient())
@@ -24,7 +36,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     //     </WalletProvider>
     //   </SuiClientProvider>
     // </QueryClientProvider>
-    <WalletProvider> 
+    <WalletProvider autoConnect> 
       {children}
     </WalletProvider>
     
