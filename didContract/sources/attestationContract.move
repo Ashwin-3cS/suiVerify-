@@ -268,8 +268,6 @@ module whitelist::attestation {
         let current_time = clock::timestamp_ms(clock) / 1000;
         assert!(timestamp <= current_time, EInvalidTimestamp);
 
-        // Verify user is whitelisted
-        assert!(table::contains(&registry.whitelisted_users, user), EUserNotWhitelisted);
 
         // Record encryption details
         let encryption_details = EncryptionDetails {

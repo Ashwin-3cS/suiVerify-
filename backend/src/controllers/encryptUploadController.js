@@ -22,49 +22,53 @@ const NUM_EPOCH = 1;
 const fullnode = process.env.FULLNODE;
 
 // Attestation contract constants
-const ATTESTATION_PACKAGE_ID = process.env.ATTESTATION_PACKAGE_ID || '0xe5bef0f39a39bf05d977665c26d731c139228ae09fadfb5b8cb956261f68baf6';
-const ATTESTATION_CAP_ID = process.env.ATTESTATION_CAP_ID || '0x52618a65c9ed98aeb4415be9bf75aa1dce7e5df2c1edb8ef44d7e7c11b3d0fb1';
-const ATTESTATION_REGISTRY_ID = process.env.ATTESTATION_REGISTRY_ID || '0xbd42f516c8e21d81b064d93c94b925f5ab66cfb49170fd036bcc77704205a9a7';
+const ATTESTATION_PACKAGE_ID = process.env.ATTESTATION_PACKAGE_ID || '0x334cb6dcc8c524d618c68c6feeb5892585fe6c5fef8b662298ad7b63a1a78bf3';
+const ATTESTATION_CAP_ID = process.env.ATTESTATION_CAP_ID || '0xc7ba70f618a2e7627ef0271c894eb07c88f64bbe25a88c4c57dafc9026c7a539';
+const ATTESTATION_REGISTRY_ID = process.env.ATTESTATION_REGISTRY_ID || '0xb9576a70236f412daff839983347a9616aa2088a1b3d68fdb3ea0d46a81adfd8';
 const CLOCK_ID = process.env.CLOCK_ID || '0x6';
 const ATTESTATION_MODULE_NAME = 'attestation';
 
-// Keypair for whitelister role (can be the same or different)
-// const whitelisterPhrase = process.env.WHITELISTER_KEYPHRASE ;
-// let whitelisterKeypair;
-// try {`
-//   whitelisterKeypair = Ed25519Keypair.deriveKeypair(whitelisterPhrase);
-//   console.log('Whitelister address:', whitelisterKeypair.toSuiAddress());
-// } catch (error) {
-//   console.error('ERROR: Failed to derive whitelister keypair:', error.message);
-//   // Continue execution, but this will fail later when whitelisterKeypair is used
-// }
 
 
 
-// Keypair for encrypter operations
-const phrase = process.env.KEYPHRASE;
-let keypair;
+// Keypair for whitelister operations
+const white_listerPhrase = process.env.WHITELISTER_KEYPHRASE;
+let keypair_whitelister;
 try {
-  keypair = Ed25519Keypair.deriveKeypair(phrase);
+  keypair_whitelister = Ed25519Keypair.deriveKeypair(white_listerPhrase);
+  console.log('whitelister address:', keypair_whitelister.toSuiAddress());
 } catch (error) {
   console.error('ERROR: Failed to derive keypair from phrase:', error.message);
   // Continue execution, but this will fail later when keypair is used
 }
 
 
+// Keypair for encrypter role (can be the same or different)
+const encrypterPhrase = process.env.ENCRYPTER_KEYPHRASE ;
+let keypair_encrypter;
+try {
+  keypair_encrypter = Ed25519Keypair.deriveKeypair(encrypterPhrase);
+  console.log('Encrypter address:', keypair_encrypter.toSuiAddress());
+} catch (error) {
+  console.error('ERROR: Failed to derive whitelister keypair:', error.message);
+  // Continue execution, but this will fail later when whitelisterKeypair is used
+}
+
+
 // Keypair for uploader operations
-// const phrase = process.env.KEYPHRASE;
-// let keypair;
-// try {
-//   keypair = Ed25519Keypair.deriveKeypair(phrase);
-// } catch (error) {
-//   console.error('ERROR: Failed to derive keypair from phrase:', error.message);
-//   // Continue execution, but this will fail later when keypair is used
-// }
+const blobUploaderPhrase = process.env.BLOB_UPLOADER_KEYPHRASE;
+let keypair_blobUploader;
+try {
+  keypair_blobUploader = Ed25519Keypair.deriveKeypair(blobUploaderPhrase);
+  console.log('blobUploader address:', keypair_blobUploader.toSuiAddress());
+} catch (error) {
+  console.error('ERROR: Failed to derive keypair from phrase:', error.message);
+  // Continue execution, but this will fail later when keypair is used
+}
 
 
 // Add environment variable validation
-if (!phrase) {
+if (!keypair_whitelister) {
   console.error('ERROR: KEYPHRASE environment variable is not set');
 }
 if (!fullnode) {
@@ -77,7 +81,7 @@ console.log('- FULLNODE:', fullnode || 'Not set');
 console.log('- PACKAGE_ID:', process.env.PACKAGE_ID || 'Not set');
 console.log('- CAP_ID:', process.env.CAP_ID || 'Not set');
 console.log('- WHITELIST_ID:', process.env.WHITELIST_ID || 'Not set');
-console.log('- KEYPHRASE:', phrase ? '[Set but masked]' : 'Not set');
+console.log('- KEYPHRASE:', white_listerPhrase ? '[Set but masked]' : 'Not set');
 console.log('- ATTESTATION_PACKAGE_ID:', ATTESTATION_PACKAGE_ID);
 console.log('- ATTESTATION_CAP_ID:', ATTESTATION_CAP_ID);
 console.log('- ATTESTATION_REGISTRY_ID:', ATTESTATION_REGISTRY_ID);
@@ -248,7 +252,7 @@ async function addUserToWhitelist(userAddress) {
     
     // Sign and execute the transaction
     const whitelistResult = await client.signAndExecuteTransaction({
-      signer: keypair,
+      signer: keypair_whitelister,
       transaction: whitelistTransaction,
       requestType: 'WaitForLocalExecution',
       options: {
@@ -297,7 +301,7 @@ async function addUserToWhitelist(userAddress) {
     
     // Sign and execute the transaction using the whitelister keypair
     const attestationResult = await client.signAndExecuteTransaction({
-      signer: keypair,
+      signer: keypair_whitelister,
       transaction: attestationTransaction,
       requestType: 'WaitForLocalExecution',
       options: {
@@ -401,6 +405,11 @@ async function recordEncryptionDetails(userAddress, encryptionId, policyObjectId
     // Create a new transaction
     const transaction = new Transaction();
     
+    // Convert string IDs to byte arrays for BCS encoding
+    const encryptionIdBytes = Array.from(new TextEncoder().encode(encryptionId));
+    const policyObjectIdBytes = Array.from(Buffer.from(policyObjectId.replace('0x', ''), 'hex'));
+    const packageIdBytes = Array.from(Buffer.from(packageId.replace('0x', ''), 'hex'));
+    
     // Add the move call to record encryption details
     transaction.moveCall({
       target: `${ATTESTATION_PACKAGE_ID}::${ATTESTATION_MODULE_NAME}::record_encryption_details`,
@@ -408,9 +417,9 @@ async function recordEncryptionDetails(userAddress, encryptionId, policyObjectId
         transaction.object(ATTESTATION_CAP_ID), // Attestation capability
         transaction.object(ATTESTATION_REGISTRY_ID), // Attestation registry
         transaction.pure.address(userAddress), // User address
-        transaction.pure(Buffer.from(encryptionId)), // Encryption ID as bytes
-        transaction.pure(Buffer.from(policyObjectId)), // Policy object ID as bytes
-        transaction.pure(Buffer.from(packageId)), // Package ID as bytes
+        transaction.pure.vector('u8', encryptionIdBytes), // Encryption ID as bytes vector
+        transaction.pure.vector('u8', policyObjectIdBytes), // Policy object ID as bytes vector
+        transaction.pure.vector('u8', packageIdBytes), // Package ID as bytes vector
         transaction.pure.u64(timestamp), // Timestamp
         transaction.object(CLOCK_ID), // Clock object
       ],
@@ -422,7 +431,7 @@ async function recordEncryptionDetails(userAddress, encryptionId, policyObjectId
     // We need to use a keypair that has the ENCRYPTER role
     // For now, we'll use the same keypair as the whitelister
     const result = await client.signAndExecuteTransaction({
-      signer: keypair, // Should be replaced with encrypterKeypair in production
+      signer: keypair_encrypter, // Should be replaced with encrypterKeypair in production
       transaction,
       requestType: 'WaitForLocalExecution',
       options: {
@@ -478,7 +487,7 @@ async function recordBlobUpload(userAddress, dataOwnerAddress) {
     
     // Sign and execute the transaction
     const result = await client.signAndExecuteTransaction({
-      signer: keypair, // Using the same keypair for now
+      signer: keypair_blobUploader, // Using the same keypair for now
       transaction,
       requestType: 'WaitForLocalExecution',
       options: {

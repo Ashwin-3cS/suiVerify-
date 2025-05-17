@@ -135,10 +135,7 @@ public fun create_did(
     ctx: &mut TxContext
 ) {
     let sender = tx_context::sender(ctx);
-    
-    // Check if sender is in whitelist
-    assert!(table::contains(&wl.addresses, sender), ENotInWhitelist);
-    
+        
     // Check if sender already has a DID
     assert!(!table::contains(&wl.did_owners, sender), EAlreadyHasDID);
     
