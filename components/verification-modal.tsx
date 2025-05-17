@@ -28,7 +28,7 @@ const API_ENDPOINT = `${API_BASE_URL}/api/encrypt-upload`;
 const DID_API_ENDPOINT = `${API_BASE_URL}/api/did/create`;
 
 // Package ID for the DID module
-const DID_PACKAGE_ID = process.env.NEXT_PUBLIC_DID_PACKAGE_ID || '0x0c455043782c532f56972ad562a2638a8ce59855d451c583c283f8c33e8f7059'; // Replace with your actual package ID
+const DID_PACKAGE_ID = process.env.NEXT_PUBLIC_DID_PACKAGE_ID || '0x334cb6dcc8c524d618c68c6feeb5892585fe6c5fef8b662298ad7b63a1a78bf3'; // Replace with your actual package ID
 
 export function VerificationModal({ type, onClose }: VerificationModalProps) {
   const [step, setStep] = useState<"upload" | "loading" | "success" | "claiming" | "claimed" | "error">("upload")
