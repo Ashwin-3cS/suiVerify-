@@ -4,6 +4,8 @@ require('dotenv').config();
 
 // Imports
 const encryptUploadRoutes = require('./routes/encryptUploadRoutes');
+const didRoutes = require('./routes/didRoutes'); // Add this line
+
 
 
 // Initialize express app
@@ -21,6 +23,8 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/encrypt-upload', encryptUploadRoutes);
+app.use('/api/did', didRoutes); // Add this line
+
 
 // Use routes
 // app.use('/api/users', userRoutes);
