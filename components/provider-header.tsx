@@ -1,15 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Wallet } from "lucide-react"
+import { ConnectButton } from '@mysten/dapp-kit';
 
-interface ProviderHeaderProps {
-  isConnected: boolean
-  onConnectWallet: () => void
-}
-
-export function ProviderHeader({ isConnected, onConnectWallet }: ProviderHeaderProps) {
+export function ProviderHeader() {
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
@@ -18,17 +12,8 @@ export function ProviderHeader({ isConnected, onConnectWallet }: ProviderHeaderP
             SuiVerify
           </span>
         </Link>
-        <Button
-          onClick={onConnectWallet}
-          className={
-            isConnected
-              ? "bg-green-600 hover:bg-green-700"
-              : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-          }
-        >
-          <Wallet className="mr-2 h-4 w-4" />
-          {isConnected ? "Connected" : "Connect Wallet"}
-        </Button>
+        
+        <ConnectButton />
       </div>
     </header>
   )
