@@ -1,8 +1,5 @@
 const { SuiClient, getFullnodeUrl } = require('@mysten/sui/client');
 
-// Initialize Sui client
-const client = new SuiClient({ url: getFullnodeUrl('mainnet') });
-
 /**
  * Create a DID by submitting a transaction to the Sui network
  * @param {Object} req - Express request object
@@ -20,20 +17,20 @@ exports.createDID = async (req, res) => {
       });
     }
 
-    // Decode base64 to Buffer
-    const txBytesBuffer = Buffer.from(txBytes, 'base64');
+    // Initialize Sui client
+    const client = new SuiClient({ url: getFullnodeUrl('testnet') });
 
     // Submit transaction to Sui
+    const suiResponse = await client.executeTransactionBlock({
+      transactionBlock: txBytes, // base64-encoded string
+      signature: signature,      // base64-encoded string
+    });
 
-    console.log('Submitting transaction to Sui network...');
-    console.log('Transaction Bytes:', txBytesBuffer);
-    console.log('Signature:', signature);
-
-    // Return success response
+    // Return the Sui response
     res.status(200).json({
       success: true,
       message: 'DID created successfully',
-    
+      suiResponse, // this contains the full response from Sui
     });
   } catch (error) {
     console.error('Error creating DID:', error);

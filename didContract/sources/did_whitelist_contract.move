@@ -38,7 +38,7 @@ public struct Cap has key {
 
 /// SoulBoundNFT representing a DID
 /// This cannot be transferred once created
-public struct DID has key {
+public struct DID_NFT has key {
     id: UID,
     /// The owner of this DID
     owner: address,
@@ -143,7 +143,7 @@ public fun create_did(
     assert!(!table::contains(&wl.did_owners, sender), EAlreadyHasDID);
     
     // Create the DID
-    let did = DID {
+    let did = DID_NFT {
         id: object::new(ctx),
         owner: sender,
         whitelist_id: object::id(wl),
@@ -227,13 +227,13 @@ entry fun seal_approve(id: vector<u8>, wl: &Whitelist, ctx: &TxContext) {
 
 /// Function to verify a DID belongs to a specific user
 /// This can be used by services that need to verify identity
-public fun verify_did_owner(did: &DID, expected_owner: address): bool {
+public fun verify_did_owner(did: &DID_NFT, expected_owner: address): bool {
     did.owner == expected_owner
 }
 
 /// Function to get the encryption ID from a DID
 /// This can only be called by the owner or a whitelisted address
-public fun get_encryption_id(did: &DID, wl: &Whitelist, ctx: &TxContext): vector<u8> {
+public fun get_encryption_id(did: &DID_NFT, wl: &Whitelist, ctx: &TxContext): vector<u8> {
     let caller = tx_context::sender(ctx);
     
     // Check if caller is the owner or in the whitelist
@@ -245,7 +245,7 @@ public fun get_encryption_id(did: &DID, wl: &Whitelist, ctx: &TxContext): vector
 
 /// Function to get the blob ID from a DID
 /// This can only be called by the owner or a whitelisted address
-public fun get_blob_id(did: &DID, wl: &Whitelist, ctx: &TxContext): String {
+public fun get_blob_id(did: &DID_NFT, wl: &Whitelist, ctx: &TxContext): String {
     let caller = tx_context::sender(ctx);
     
     // Check if caller is the owner or in the whitelist
