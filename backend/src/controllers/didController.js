@@ -7,7 +7,17 @@ const { SuiClient, getFullnodeUrl } = require('@mysten/sui/client');
  */
 exports.createDID = async (req, res) => {
   try {
-    const { txBytes, signature } = req.body;
+    const { txBytes, signature, didOwner } = req.body;
+    if (!didOwner) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required field: didOwner is required'
+      });
+    }
+
+    console.log('Received request to create DID:', req.body);
+    console.log('DID Owner:', didOwner);
+    console.log('Transaction Bytes:', txBytes);  
 
     // Validate request body
     if (!txBytes || !signature) {

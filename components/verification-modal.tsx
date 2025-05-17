@@ -250,11 +250,14 @@ const handleClaimNFT = async () => {
     console.log('Transaction data:', signedTx);
     
     // Send the signed transaction to the backend for execution
-    const response = await axios.post(DID_API_ENDPOINT, signedTx, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+const response = await axios.post(DID_API_ENDPOINT, {
+  ...signedTx,
+  didOwner: userAddress //  the wallet address as the DID owner
+}, {
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
     
     console.log('DID API Response:', response.data);
     
