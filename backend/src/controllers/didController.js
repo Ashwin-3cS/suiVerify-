@@ -25,6 +25,10 @@ exports.createDID = async (req, res) => {
 
     // Submit transaction to Sui
 
+    console.log('Submitting transaction to Sui network...');
+    console.log('Transaction Bytes:', txBytesBuffer);
+    console.log('Signature:', signature);
+
     // Return success response
     res.status(200).json({
       success: true,
