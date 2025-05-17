@@ -482,12 +482,119 @@ const response = await axios.post(DID_API_ENDPOINT, {
                   <div className="space-y-2">
                     {transactionDetails.whitelist && (
                       <p className="text-xs font-mono break-all">
-                        <span className="font-medium">Transaction: </span>
-                        {transactionDetails.whitelist.transactionDigest}
+                        <span className="font-medium">Whitelist Transaction: </span>
+                        <a 
+                          href={`https://suiscan.xyz/testnet/tx/${transactionDetails.whitelist.transactionDigest}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {transactionDetails.whitelist.transactionDigest}
+                        </a>
                       </p>
                     )}
+                    
+                    {transactionDetails.attestation && (
+                      <div className="mt-3 space-y-2">
+                        <h5 className="font-medium">Attestation Transactions</h5>
+                        {transactionDetails.attestation.whitelistTransactionDigest && (
+                          <p className="text-xs font-mono break-all">
+                            <span className="font-medium">Whitelist Attestation: </span>
+                            <a 
+                              href={`https://suiscan.xyz/testnet/tx/${transactionDetails.attestation.whitelistTransactionDigest}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {transactionDetails.attestation.whitelistTransactionDigest}
+                            </a>
+                          </p>
+                        )}
+                        
+                        {transactionDetails.attestation.encryptionTransactionDigest && (
+                          <p className="text-xs font-mono break-all">
+                            <span className="font-medium">Encryption Attestation: </span>
+                            <a 
+                              href={`https://suiscan.xyz/testnet/tx/${transactionDetails.attestation.encryptionTransactionDigest}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {transactionDetails.attestation.encryptionTransactionDigest}
+                            </a>
+                          </p>
+                        )}
+                        
+                        {transactionDetails.attestation.blobUploadTransactionDigest && (
+                          <p className="text-xs font-mono break-all">
+                            <span className="font-medium">Blob Upload Attestation: </span>
+                            <a 
+                              href={`https://suiscan.xyz/testnet/tx/${transactionDetails.attestation.blobUploadTransactionDigest}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {transactionDetails.attestation.blobUploadTransactionDigest}
+                            </a>
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    
+                    {transactionDetails.storage && (
+                      <div className="mt-3 space-y-2">
+                        <h5 className="font-medium">Storage Information</h5>
+                        <p className="text-xs">
+                          <span className="font-medium">Status: </span>
+                          {transactionDetails.storage.status}
+                        </p>
+                        
+                        {transactionDetails.storage.blobId && (
+                          <p className="text-xs font-mono break-all">
+                            <span className="font-medium">Blob ID: </span>
+                            <a 
+                              href={transactionDetails.storage.blobUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {transactionDetails.storage.blobId}
+                            </a>
+                          </p>
+                        )}
+                        
+                        {transactionDetails.storage.suiRef && (
+                          <p className="text-xs font-mono break-all">
+                            <span className="font-medium">{transactionDetails.storage.suiRefType}: </span>
+                            <a 
+                              href={transactionDetails.storage.suiUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {transactionDetails.storage.suiRef}
+                            </a>
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    
+                    {transactionDetails.file && (
+                      <div className="mt-3 space-y-2">
+                        <h5 className="font-medium">File Information</h5>
+                        <p className="text-xs">
+                          <span className="font-medium">File Name: </span>
+                          {transactionDetails.file.fileName}
+                        </p>
+                        <p className="text-xs font-mono break-all">
+                          <span className="font-medium">Encryption ID: </span>
+                          {transactionDetails.file.encryptionId}
+                        </p>
+                      </div>
+                    )}
+                    
                     {transactionDetails.timestamp && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 mt-3">
                         Timestamp: {new Date(transactionDetails.timestamp).toLocaleString()}
                       </p>
                     )}
