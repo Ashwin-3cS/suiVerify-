@@ -68,7 +68,7 @@ if (!phrase) {
   console.error('ERROR: KEYPHRASE environment variable is not set');
 }
 if (!fullnode) {
-  console.error('ERROR: FULLNODE environment variable is not set');
+  console.error('ERROR: FULLNODE environment variable is not set')
 }
 
 // Log environment variables for debugging (mask sensitive data)
