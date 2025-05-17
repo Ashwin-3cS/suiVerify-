@@ -261,8 +261,9 @@ async function addUserToWhitelist(userAddress) {
     console.log('Whitelist transaction digest:', whitelistResult.digest);
     
     // Step 2: Record the whitelist action in the attestation contract
-    // Get the transaction digest as bytes
-    const txDigestBytes = Buffer.from(whitelistResult.digest.replace('0x', ''), 'hex');
+    // Convert the transaction digest to bytes array for BCS encoding
+    const txDigestHex = whitelistResult.digest.replace('0x', '');
+    const txDigestBytes = Array.from(Buffer.from(txDigestHex, 'hex'));
     
     // Get current timestamp in seconds
     const timestamp = Math.floor(Date.now() / 1000);
@@ -283,7 +284,7 @@ async function addUserToWhitelist(userAddress) {
         attestationTransaction.object(ATTESTATION_CAP_ID), // Attestation capability
         attestationTransaction.object(ATTESTATION_REGISTRY_ID), // Attestation registry
         attestationTransaction.pure.address(userAddress), // User address
-        attestationTransaction.pure(txDigestBytes), // Transaction digest as bytes
+        attestationTransaction.pure.vector('u8', txDigestBytes), // Transaction digest as bytes vector
         attestationTransaction.pure.u64(timestamp), // Timestamp
         attestationTransaction.object(CLOCK_ID), // Clock object
       ],
@@ -319,7 +320,6 @@ async function addUserToWhitelist(userAddress) {
     throw error;
   }
 }
-
 /**
  * Encrypt file data using SEAL and store on Walrus
  * @param {Buffer|Uint8Array} fileData - The file data to encrypt
