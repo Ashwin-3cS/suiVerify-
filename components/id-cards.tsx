@@ -4,7 +4,7 @@ import type React from "react"
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Calendar, Flag, FileCheck } from "lucide-react"
+import { Calendar, Flag, FileCheck, Briefcase, MapPin, CreditCard, GraduationCap, Shield, Fingerprint } from "lucide-react"
 import type { VerificationType } from "@/lib/types"
 
 interface IdCardsProps {
@@ -31,6 +31,42 @@ export function IdCards({ onSelect }: IdCardsProps) {
         title="KYC Document Badge"
         description="Complete full KYC once and use your credential across multiple platforms."
         onClick={() => onSelect("kyc")}
+      />
+      <VerificationCard
+        icon={<Briefcase className="h-12 w-12 text-green-600" />}
+        title="Employment Verification"
+        description="Verify your employment status while maintaining privacy of your work details."
+        onClick={() => onSelect("employment")}
+      />
+      <VerificationCard
+        icon={<MapPin className="h-12 w-12 text-red-600" />}
+        title="Address Verification"
+        description="Confirm your residence without exposing your exact address information."
+        onClick={() => onSelect("address")}
+      />
+      <VerificationCard
+        icon={<CreditCard className="h-12 w-12 text-amber-600" />}
+        title="Financial Status"
+        description="Prove financial standing without revealing sensitive account details."
+        onClick={() => onSelect("financial")}
+      />
+      <VerificationCard
+        icon={<GraduationCap className="h-12 w-12 text-teal-600" />}
+        title="Education Credentials"
+        description="Share your educational qualifications securely with verified institutions."
+        onClick={() => onSelect("education")}
+      />
+      <VerificationCard
+        icon={<Shield className="h-12 w-12 text-cyan-600" />}
+        title="Identity Verification"
+        description="Verify your identity across platforms without repeatedly sharing personal data."
+        onClick={() => onSelect("identity")}
+      />
+      <VerificationCard
+        icon={<Fingerprint className="h-12 w-12 text-violet-600" />}
+        title="Biometric Verification"
+        description="Use biometric data for secure verification without storing sensitive information."
+        onClick={() => onSelect("biometric")}
       />
     </div>
   )

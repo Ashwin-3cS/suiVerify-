@@ -14,7 +14,7 @@ export function BenefitsSection() {
           />
           <BenefitCard
             icon={<Briefcase className="h-12 w-12 text-purple-600" />}
-            title="Portable"
+            title="Reusable"
             description="Take your verified credentials anywhere. No more repetitive KYC processes across platforms."
           />
           <BenefitCard
