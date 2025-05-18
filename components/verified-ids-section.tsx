@@ -66,55 +66,7 @@ export function VerifiedIdsSection() {
           </p>
         </div>
 
-        {!isWalletConnected ? (
-          <div className="text-center">
-            <p className="mb-6 text-muted-foreground">Connect your wallet to view your verified IDs</p>
-            <Button
-              onClick={handleConnectWallet}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-            >
-              Connect Wallet
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {verifiedIds.map((id) => (
-              <Card
-                key={id.id}
-                className="overflow-hidden transition-all hover:shadow-md cursor-pointer"
-                onClick={() => handleIdClick(id)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center mb-4">
-                    <div className="bg-slate-100 p-3 rounded-xl mr-4">{id.icon}</div>
-                    <div>
-                      <h3 className="text-xl font-bold">{id.type}</h3>
-                      <div className="flex items-center mt-1">
-                        {id.status === "Verified" ? (
-                          <Badge className="bg-green-600">
-                            <CheckCircle className="h-3 w-3 mr-1" /> Verified
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-amber-600 border-amber-600">
-                            Pending
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-slate-100">
-                    <p className="text-sm text-muted-foreground">
-                      <span className="font-medium">Scope:</span> {id.scope}
-                    </p>
-                    <p className="text-sm text-muted-foreground truncate">
-                      <span className="font-medium">Token ID:</span> {id.tokenId.substring(0, 10)}...
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+
 
         {selectedId && <IdDetailsModal id={selectedId} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />}
       </div>

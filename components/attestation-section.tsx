@@ -21,7 +21,7 @@ export function AttestationSection() {
                 <div className="w-6 h-6 rounded-full bg-white border-2 border-purple-500"></div>
                 <div className="absolute top-0 left-3 w-[150px] h-1 bg-purple-500"></div>
               </div>
-              <div className="w-1/2 pl-12">
+              <div className="w-1/2 pl-40">
                 <div className="bg-white p-6 rounded-lg shadow-md">
                   <h3 className="font-bold text-lg">User submits document</h3>
                   <p className="text-sm text-muted-foreground">Securely upload your ID document</p>
@@ -31,7 +31,7 @@ export function AttestationSection() {
 
             {/* Step 2: Provider verifies */}
             <div className="flex justify-start mb-24 relative">
-              <div className="w-1/2 pr-12">
+              <div className="w-1/2 pr-40">
                 <div className="bg-white p-6 rounded-lg shadow-md">
                   <h3 className="font-bold text-lg">Provider verifies</h3>
                   <p className="text-sm text-muted-foreground">Webcam verification with encryption</p>
@@ -51,17 +51,17 @@ export function AttestationSection() {
                 <div className="w-6 h-6 rounded-full bg-white border-2 border-purple-500"></div>
                 <div className="absolute top-0 left-3 w-[150px] h-1 bg-purple-500"></div>
               </div>
-              <div className="w-1/2 pl-12">
+              <div className="w-1/2 pl-40">
                 <div className="bg-white p-6 rounded-lg shadow-md">
-                  <h3 className="font-bold text-lg">Data encrypted</h3>
-                  <p className="text-sm text-muted-foreground">Using Seal encryption protocol</p>
+                  <h3 className="font-bold text-lg">Data encrypted & stored after verification</h3>
+                  <p className="text-sm text-muted-foreground">Using Seal & Walrus protocols</p>
                 </div>
               </div>
             </div>
 
             {/* Step 4: NFT ID issued */}
             <div className="flex justify-start mb-24 relative">
-              <div className="w-1/2 pr-12">
+              <div className="w-1/2 pr-40">
                 <div className="bg-white p-6 rounded-lg shadow-md">
                   <h3 className="font-bold text-lg">NFT ID issued</h3>
                   <p className="text-sm text-muted-foreground">Credential sent to your wallet</p>
@@ -81,7 +81,7 @@ export function AttestationSection() {
                 <div className="w-6 h-6 rounded-full bg-white border-2 border-purple-500"></div>
                 <div className="absolute top-0 left-3 w-[150px] h-1 bg-purple-500"></div>
               </div>
-              <div className="w-1/2 pl-12">
+              <div className="w-1/2 pl-40">
                 <div className="bg-white p-6 rounded-lg shadow-md">
                   <h3 className="font-bold text-lg">Verifier checks</h3>
                   <p className="text-sm text-muted-foreground">Only metadata, never raw data</p>

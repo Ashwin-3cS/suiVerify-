@@ -14,9 +14,6 @@ export function LandingHeader() {
           <Link href="/provider">
             <Button variant="ghost">Providers</Button>
           </Link>
-          <Link href="/about">
-            <Button variant="ghost">About</Button>
-          </Link>
           <Link href="/provider">
             <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
               Get Your ID
