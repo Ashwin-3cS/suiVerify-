@@ -1,3 +1,4 @@
+"use client"
 import type React from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -19,31 +20,37 @@ export function VerifiersSection() {
             name="SuiFlix"
             description="Requires Age Verification"
             icon={<Film className="h-10 w-10 text-blue-600" />}
+            url="/suiflix"
           />
           <VerifierCard
             name="SuiNation"
             description="Requires Citizenship Status"
             icon={<Flag className="h-10 w-10 text-purple-600" />}
+            url="/suination"
           />
           <VerifierCard
             name="DeID Voting"
             description="Requires Verified Nationality"
             icon={<Vote className="h-10 w-10 text-indigo-600" />}
+            url="/deid-voting"
           />
           <VerifierCard
             name="SuiSwap"
             description="Requires KYC Verification"
             icon={<Film className="h-10 w-10 text-blue-600" />}
+            url="/suiswap"
           />
           <VerifierCard
             name="SuiLend"
             description="Requires Age & KYC Verification"
             icon={<Flag className="h-10 w-10 text-purple-600" />}
+            url="/suilend"
           />
           <VerifierCard
             name="SuiDAO"
             description="Requires Citizenship Status"
             icon={<Vote className="h-10 w-10 text-indigo-600" />}
+            url="/suidao"
           />
         </div>
       </div>
@@ -55,11 +62,15 @@ interface VerifierCardProps {
   name: string
   description: string
   icon: React.ReactNode
+  url: string
 }
 
-function VerifierCard({ name, description, icon }: VerifierCardProps) {
+function VerifierCard({ name, description, icon, url }: VerifierCardProps) {
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md border-0 bg-gradient-to-br from-slate-50 to-white">
+    <Card 
+      className="overflow-hidden transition-all hover:shadow-md border-0 bg-gradient-to-br from-slate-50 to-white cursor-pointer"
+      onClick={() => window.open(url, '_blank')}
+    >
       <CardContent className="p-6 flex items-center">
         <div className="bg-slate-100 p-4 rounded-xl mr-4">{icon}</div>
         <div>
